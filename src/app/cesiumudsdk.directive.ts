@@ -574,7 +574,7 @@ export class CesiumudsdkDirective implements OnInit {
   };
 
   ngOnInit() {
-    const viewer = new Viewer(this.el.nativeElement, {
+    viewer = new Viewer(this.el.nativeElement, {
       scene3DOnly: true,
       imageryProvider: new UrlTemplateImageryProvider({
         url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
