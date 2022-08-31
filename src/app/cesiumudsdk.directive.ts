@@ -18,6 +18,30 @@ declare module "cesium" {
   }
 }
 
+export interface Module {
+  arguments?: string[];
+  canvas?: HTMLElement | undefined;
+  noInitialRun?: boolean;
+  mainScriptUrlOrBlob?: string;
+  preRun:(() => void)[];
+  onRuntimeInitialized():void;
+  setStatusLast: { text: string; };
+  setStatus(msg: string): void;
+
+  ccall(ident: string, returnType?: string, argTypes?: string[], args?: any[]): number | void;
+  addFunction(callback: Function, signature: string): number;
+  removeFunction(callbackPtr: number): void;
+
+  _malloc(size: number): number;
+  _free(ptr: number): void;
+}
+
+declare global {
+  var Module: Module;
+  function UTF8ToString(ptr: number, maxBytesToRead?: number): string;
+  function getValue(ptr: number, type: string): number;
+}
+
 import { Directive, ElementRef, OnInit } from '@angular/core';
 import { GeometryAttribute } from 'cesium';
 import { Appearance } from 'cesium';
@@ -231,7 +255,7 @@ class VtxfPrimitive {
       return vertexArray;
     };
 
-    const createCommand = (context: { defaultTexture: any; }) => {
+    function createCommand(context:any) {
       var translucent = false;
       var closed = true;
 
@@ -276,7 +300,6 @@ class VtxfPrimitive {
         renderState: renderState,
         shaderProgram: shaderProgram,
         uniformMap: uniformMap,
-        owner: this,
         pass: Pass.OPAQUE
       });
     }
@@ -330,18 +353,22 @@ class VtxfPrimitive {
       var data = new Uint8Array(HEAPU8.subarray(ptr, ptr + (thisWidth * thisHeight * 4)));
 
       colourTextureGL.copyFrom({
-        width: thisWidth,
-        height: thisHeight,
-        arrayBufferView: data
+        source: {
+          width: thisWidth,
+          height: thisHeight,
+          arrayBufferView: data
+        }
       });
 
       var ptr = udSDKJS_GetDepthBuffer();
       var dataHeap = new Uint8Array(HEAPU8.subarray(ptr, ptr + (thisWidth * thisHeight * 4)));
 
       udTextureDepth.copyFrom({
-        width: thisWidth,
-        height: thisHeight,
-        arrayBufferView: dataHeap
+        source: {
+          width: thisWidth,
+          height: thisHeight,
+          arrayBufferView: dataHeap
+        }
       });
 
       if (!defined(this._command)) {
@@ -524,37 +551,6 @@ function udSDKPluginInit() {
   );
 };
 
-var Module = {
-  noExitRuntime: true,
-  preRun: [],
-  postRun: udSDKPluginInit,
-  setStatusLast: { time: Date.now(), text: '' },
-  setStatus: function (text: string) {
-    if (text === Module.setStatusLast.text)
-      return;
-
-    var m = text.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/);
-    var now = Date.now();
-    if (m && now - Module.setStatusLast.time < 30)
-      return; // if this is a progress update, skip it if too soon
-
-    Module.setStatusLast.time = now;
-    Module.setStatusLast.text = text;
-    if (m) {
-      text = m[1];
-    }
-
-    console.log(text);
-  },
-  totalDependencies: 0,
-  monitorRunDependencies: function (left: number) {
-    this.totalDependencies = Math.max(this.totalDependencies, left);
-    Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies - left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');
-  }
-};
-
-Module.setStatus('Downloading...');
-
 @Directive({
   selector: '[appCesiumudsdk]'
 })
@@ -586,39 +582,35 @@ export class CesiumudsdkDirective implements OnInit {
       geocoder: false,
     });
     
-    var myBox = viewer.scene.primitives.add(new VtxfPrimitive());
+    viewer.scene.primitives.add(new VtxfPrimitive());
 
-    var Module = {
+    globalThis.Module = {
+      noInitialRun: true,
       noExitRuntime: true,
       preRun: [],
-      postRun: udSDKPluginInit,
-      setStatusLast: { time: Date.now(), text: '' },
+      onRuntimeInitialized: udSDKPluginInit,
+      setStatusLast: { text: '' },
       setStatus: function (text: string) {
-        if (text === Module.setStatusLast.text)
-          return;
-
-        var m = text.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/);
-        var now = Date.now();
-        if (m && now - Module.setStatusLast.time < 30)
-          return; // if this is a progress update, skip it if too soon
-
-        Module.setStatusLast.time = now;
-        Module.setStatusLast.text = text;
-        if (m) {
-          text = m[1];
-        }
-
         console.log(text);
+
+        if (text === globalThis.Module.setStatusLast.text)
+          return;
+    
+          globalThis.Module.setStatusLast.text = text;
       },
-      totalDependencies: 0,
-      monitorRunDependencies: function (left: number) {
-        this.totalDependencies = Math.max(this.totalDependencies, left);
-        Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies - left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');
-      }
+
+      ccall(ident: string, returnType?: string, argTypes?: string[], args?: any[]): number | void { return; },
+      addFunction(callback: Function, signature: string): number { return 0; },
+      removeFunction(callbackPtr: number): void { return; },
+      _malloc(size: number): number { return 0; },
+      _free(ptr: number): void { return; },
     };
 
-    Module.setStatus('Downloading...');
+    globalThis.Module.setStatus('Downloading...');
+    
+    let script = document.createElement("script");
+    script.src = "assets/euclideon/udSDKjs.js";
+    document.body.appendChild(script);
   }
-
 }
 

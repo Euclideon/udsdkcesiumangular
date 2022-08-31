@@ -33,7 +33,6 @@
             ],
             "scripts": [
               "node_modules/cesium/Build/Cesium/Cesium.js",
-              "src/assets/euclideon/udsdkjs.js",
               "src/assets/euclideon/easyudsdkjs.js"
             ]
           },
@@ -72,6 +71,12 @@
         },
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
+          "options": {
+            "headers": {
+              "Cross-Origin-Embedder-Policy": "require-corp",
+              "Cross-Origin-Opener-Policy": "same-origin"
+            }
+          },
           "configurations": {
             "production": {
               "browserTarget": "my-app:build:production"
