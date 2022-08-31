@@ -586,7 +586,6 @@ export class CesiumudsdkDirective implements OnInit {
 
     globalThis.Module = {
       noInitialRun: true,
-      noExitRuntime: true,
       preRun: [],
       onRuntimeInitialized: udSDKPluginInit,
       setStatusLast: { text: '' },
