@@ -240,7 +240,12 @@ class VtxfPrimitive {
             componentDatatype: ComponentDatatype.FLOAT,
             componentsPerAttribute: 2,
             values: sts
-          })
+          }),
+          // Cesium.d.ts doesn't support undefined, but internally CesiumJS checks for null
+          normal: (undefined as unknown as GeometryAttribute),
+          bitangent: (undefined as unknown as GeometryAttribute),
+          tangent: (undefined as unknown as GeometryAttribute),
+          color: (undefined as unknown as GeometryAttribute)
         },
         primitiveType: PrimitiveType.TRIANGLES
       });
