@@ -56,7 +56,7 @@ import { Credit, UrlTemplateImageryProvider, Viewer, Texture, VertexArray, Shade
 declare function udSDKJS_ResizeScene(width:number, height:number, colourBuffer:number, depthBuffer:number):number;
 declare function udSDKJS_SetMatrix(matrixType:string, a0:number, a1:number, a2:number, a3:number, a4:number, a5:number, a6:number, a7:number, a8:number, a9:number, a10:number, a11:number, a12:number, a13:number, a14:number, a15:number):number;
 declare function udSDKJS_RegisterShared():void;
-declare function udSDKJS_CreateFrom_udCloud(appName:string):any;
+declare function udSDKJS_CreateSharedFrom_udCloud(appName:string):any;
 declare function udSDKJS_RenderQueue():number;
 declare function udSDKJS_GetColourBuffer():number;
 declare function udSDKJS_GetDepthBuffer():number;
@@ -548,7 +548,7 @@ function udSDKPluginInit() {
   udSDKJS_RegisterShared();
   udSDKReady = 1;
 
-  udSDKJS_CreateFrom_udCloud("CesiumJS Sample").then(
+  udSDKJS_CreateSharedFrom_udCloud("CesiumJS Sample").then(
     function () {
       loadModels();
     },
@@ -561,18 +561,6 @@ function udSDKPluginInit() {
 })
 export class CesiumudsdkDirective implements OnInit {
   constructor(private el: ElementRef) { }
-
-  udSDKPluginInit() {
-    udSDKJS_RegisterShared();
-    udSDKReady = 1;
-
-    udSDKJS_CreateFrom_udCloud("CesiumJS Sample").then(
-      function () {
-        loadModels();
-      },
-      function (code: any) { OnError("Get Session", code); }
-    );
-  };
 
   ngOnInit() {
     viewer = new Viewer(this.el.nativeElement, {
